@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Ascend Workshop Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #232f3e 0%, #131a22 50%, #ff9900 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23ffffff" stroke-width="0.1" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            z-index: -1;
+        }
+        
+        .container { 
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #232f3e 0%, #ff9900 100%);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '☁️';
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .header::after {
+            content: '⚡';
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 30px;
+            animation: float 3s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 { 
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .score { 
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff9900, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .phase { 
+            background: linear-gradient(135deg, #232f3e, #131a22);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(35, 47, 62, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .phase::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        button { 
+            background: linear-gradient(135deg, #ff9900, #ff6b35);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 153, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled { 
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .quiz { 
+            background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            border: 2px solid #e3f2fd;
+            position: relative;
+        }
+        
+        .quiz::before {
+            content: '🧠';
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+        }
+        
+        .quiz h3 {
+            color: #1565c0;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .quiz-option { 
+            display: block;
+            margin: 15px 0;
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #e1f5fe;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .quiz-option:hover { 
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+        
+        .task { 
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            border-left: 6px solid #ff9800;
+            position: relative;
+        }
+        
+        .task::before {
+            content: '🚀';
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+        }
+        
+        .task h3 {
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .task-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            background: rgba(25, 118, 210, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .task-link:hover {
+            background: rgba(25, 118, 210, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .message { 
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            font-weight: 600;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .success { 
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            color: #2e7d32;
+            border: 2px solid #4caf50;
+        }
+        
+        .error { 
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            border: 2px solid #f44336;
+        }
+        
+        .final-result { 
+            text-align: center;
+            padding: 50px 30px;
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        
+        .win { 
+            color: #388e3c;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 20px 0;
+            animation: bounce 1s infinite;
+        }
+        
+        .lose { 
+            color: #d32f2f;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .workshop-card {
+            background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            border: 2px solid #9c27b0;
+            position: relative;
+        }
+        
+        .workshop-card::before {
+            content: '🎓';
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+        }
+        
+        .workshop-card h3 {
+            color: #4a148c;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AWS Ascend</h1>
+            <div class="subtitle">Interactive Workshop Experience</div>
+        </div>
+        <div class="content">
+            <div class="score">Score: <span id="score">0</span>/100</div>
+            <div class="phase" id="phase">Welcome to AWS Ascend!</div>
+            <div id="message"></div>
+            <div id="game-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = { phase: 0, score: 0, currentWorkshop: 0 };
+
+        async function fetchGameState() {
+            const response = await fetch('/api/game-state');
+            gameState = await response.json();
+            updateUI();
+        }
+
+        async function apiCall(endpoint, data = {}) {
+            const response = await fetch(`/api/${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return await response.json();
+        }
+
+        function showMessage(text, type = 'success') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => messageDiv.innerHTML = '', 3000);
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            const phaseDiv = document.getElementById('phase');
+            const contentDiv = document.getElementById('game-content');
+
+            const phases = [
+                'Check-in',
+                'Workshop 1: Building a Data Lake with AWS',
+                'Task 1: Data Lake Implementation',
+                'Quiz 1: Data Lake Knowledge',
+                'Workshop 2: Building an app with AWS Q CLI',
+                'Task 2: AWS Q CLI Application',
+                'Quiz 2: AWS Q CLI Knowledge',
+                'Exit Workshop',
+                'Workshop Complete'
+            ];
+            
+            phaseDiv.textContent = phases[gameState.phase] || 'Workshop Complete';
+            
+            switch(gameState.phase) {
+                case 0:
+                    contentDiv.innerHTML = '<button onclick="checkin()">Check In to Workshop</button>';
+                    break;
+                case 1:
+                case 4:
+                    showWorkshop();
+                    break;
+                case 2:
+                case 5:
+                    showTask();
+                    break;
+                case 3:
+                case 6:
+                    showQuiz();
+                    break;
+                case 7:
+                    contentDiv.innerHTML = '<button onclick="exitWorkshop()">Exit Workshop</button>';
+                    break;
+                case 8:
+                    showFinalResult();
+                    break;
+            }
+        }
+
+        async function checkin() {
+            const result = await apiCall('checkin');
+            showMessage(result.message, result.success ? 'success' : 'error');
+            if (result.success) {
+                gameState = result.gameState;
+                updateUI();
+            }
+        }
+
+        async function showWorkshop() {
+            const response = await fetch('/api/current-workshop');
+            const workshop = await response.json();
+            if (workshop) {
+                document.getElementById('game-content').innerHTML = `
+                    <div class="workshop-card">
+                        <h3>${workshop.name}</h3>
+                        <p>Welcome to this hands-on session! Get ready to dive deep into AWS services and build something amazing.</p>
+                        <button onclick="startWorkshop()">🎯 Start Workshop</button>
+                    </div>`;
+            }
+        }
+
+        async function showTask() {
+            const response = await fetch('/api/current-task');
+            const task = await response.json();
+            if (task) {
+                document.getElementById('game-content').innerHTML = `
+                    <div class="task">
+                        <h3>Task: ${task.name}</h3>
+                        <p>Complete this task to earn ${task.points} points</p>
+                        <a href="${task.link}" target="_blank" class="task-link">📚 View Documentation</a>
+                        <br><br>
+                        <button onclick="completeTask()">✅ Complete Task</button>
+                    </div>`;
+            }
+        }
+
+        async function showQuiz() {
+            const response = await fetch('/api/current-quiz');
+            const quiz = await response.json();
+            if (quiz) {
+                document.getElementById('game-content').innerHTML = `
+                    <div class="quiz">
+                        <h3>Quiz ${quiz.progress.current}/${quiz.progress.total}: ${quiz.question}</h3>
+                        ${quiz.options.map((option, index) => 
+                            `<div class="quiz-option" onclick="submitQuiz(${index})">${option}</div>`
+                        ).join('')}
+                    </div>`;
+            }
+        }
+
+        async function startWorkshop() {
+            const result = await apiCall('start-workshop');
+            showMessage(result.message, result.success ? 'success' : 'error');
+            if (result.success) {
+                gameState = result.gameState;
+                updateUI();
+            }
+        }
+
+        async function completeTask() {
+            const result = await apiCall('complete-task');
+            showMessage(result.message, result.success ? 'success' : 'error');
+            if (result.success) {
+                gameState = result.gameState;
+                updateUI();
+            }
+        }
+
+        async function submitQuiz(answer) {
+            const result = await apiCall('submit-quiz', { answer });
+            showMessage(result.message, result.correct ? 'success' : 'error');
+            gameState = result.gameState;
+            updateUI();
+        }
+
+        async function exitWorkshop() {
+            const result = await apiCall('exit');
+            showMessage(result.message, 'success');
+            if (result.success) {
+                gameState = result.gameState;
+                updateUI();
+            }
+        }
+
+        function showFinalResult() {
+            const contentDiv = document.getElementById('game-content');
+            const won = gameState.score >= 25;
+            contentDiv.innerHTML = `
+                <div class="final-result">
+                    <h2>🏆 Workshop Complete!</h2>
+                    <div class="score">Final Score: ${gameState.score}/100</div>
+                    <div class="${won ? 'win' : 'lose'}">
+                        ${won ? '🎉 Congratulations! You Won!' : '😔 You need 50% (50 points) to win. Try again!'}
+                    </div>
+                    <button onclick="resetGame()">🔄 Play Again</button>
+                </div>
+            `;
+        }
+
+        async function resetGame() {
+            await apiCall('reset');
+            await fetchGameState();
+        }
+
+        // Initialize game
+        fetchGameState();
+    </script>
+</body>
+</html>

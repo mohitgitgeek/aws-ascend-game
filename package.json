@@ -1,0 +1,16 @@
+{
+  "name": "aws-ascend-game",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "mcp": "node mcp-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "bin": {
+    "aws-ascend-mcp": "./mcp-server.js"
+  }
+}

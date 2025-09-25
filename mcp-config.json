@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "aws-ascend-game": {
+      "command": "node",
+      "args": ["/tmp/aws-ascend-game/mcp-server.js"],
+      "env": {}
+    }
+  }
+}
